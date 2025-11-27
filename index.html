@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Racing Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/",
+                "rapier": "https://cdn.skypack.dev/@dimforge/rapier3d-compat"
+                
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="mainmenu" class="visible">
+        <h1>Car Racing Game</h1><br>
+        <h4>Driving: arrow keys<br>Reset: r</h4><br>
+            <fieldset>
+            <legend>Select a car:</legend>
+                <button id="dodge">Dodge Charger</button><br>
+                <button id="bugatti">Bugatti Chiron</button><br>
+                <button id="porche">Porche 911</button><br>
+                <button id="bmw">BMW M5</button>
+            </fieldset>
+        <footer>
+            <p>© 2025 Aki Luopa (version 0.1)</p>
+        </footer>
+    </div>
+    <div id="speedometer" class="hidden"
+        style="
+            position: absolute; 
+            bottom: 20px; 
+            left: 20px; 
+            font-size: 32px; 
+            color: white;
+            font-family: Arial;
+        ">
+        0 km/h
+    </div>    
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
