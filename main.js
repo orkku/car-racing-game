@@ -26,25 +26,21 @@ const selection_3 = document.getElementById('porche');
 const selection_4 = document.getElementById('bmw');
 selection_1.addEventListener('click', () => {
     car_number = 1;
-    document.getElementById('mainmenu').className = 'hidden';
     document.getElementById('speedometer').className = 'visible';
     startGame();
 });
 selection_2.addEventListener('click', () => {
     car_number = 2;
-    document.getElementById('mainmenu').className = 'hidden';
     document.getElementById('speedometer').className = 'visible';
     startGame();
 });
 selection_3.addEventListener('click', () => {
     car_number = 4;
-    document.getElementById('mainmenu').className = 'hidden';
     document.getElementById('speedometer').className = 'visible';
     startGame();
 });
 selection_4.addEventListener('click', () => {
     car_number = 10;
-    document.getElementById('mainmenu').className = 'hidden';
     document.getElementById('speedometer').className = 'visible';
     startGame();
 });
@@ -77,7 +73,7 @@ manager.onLoad = function ( ) {
 
 manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
     var percentage = (itemsLoaded / itemsTotal) * 100;
-    document.getElementById("percentage").innerText = percentage.toFixed(0) + "%";
+    document.getElementById("percentage").innerHTML = percentage.toFixed(0) + "%";
     //console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
 };
 
