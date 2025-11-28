@@ -25,23 +25,19 @@ const selection_2 = document.getElementById('bugatti');
 const selection_3 = document.getElementById('porche');
 const selection_4 = document.getElementById('bmw');
 selection_1.addEventListener('click', () => {
-    car_number = 1;
-    document.getElementById('speedometer').className = 'visible';
+    car_number = 1;    
     startGame();
 });
 selection_2.addEventListener('click', () => {
     car_number = 2;
-    document.getElementById('speedometer').className = 'visible';
     startGame();
 });
 selection_3.addEventListener('click', () => {
     car_number = 4;
-    document.getElementById('speedometer').className = 'visible';
     startGame();
 });
 selection_4.addEventListener('click', () => {
     car_number = 10;
-    document.getElementById('speedometer').className = 'visible';
     startGame();
 });
 
@@ -68,6 +64,7 @@ manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
 
 manager.onLoad = function ( ) {
     document.getElementById('mainmenu').className = "hidden";
+    document.getElementById('speedometer').className = 'visible';
     //console.log('Loading complete!');
 };
 
