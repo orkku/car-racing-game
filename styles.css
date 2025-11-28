@@ -36,6 +36,18 @@ footer {
     height: 100%;
 }
 
+#progress {
+    position: fixed;
+    text-align: center;
+    font-size: 20px;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    background-color: black;
+    color: white;
+    padding: 13px 36px;
+}
+
 .visible {
     display: block;
 }

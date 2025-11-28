@@ -63,6 +63,27 @@ const stats = new Stats();
 document.body.appendChild( stats.dom );
 // manager
 const manager = new THREE.LoadingManager();
+manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
+    document.getElementById('instructions').className = "hidden";
+    document.getElementById('selection').className = "hidden";
+    document.getElementById('progress').className = "visible";
+    //console.log('Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+};
+
+manager.onLoad = function ( ) {
+    document.getElementById('mainmenu').className = "hidden";
+    //console.log('Loading complete!');
+};
+
+manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+    var percentage = (itemsLoaded / itemsTotal) * 100;
+    document.getElementById("percentage").innerText = percentage.toFixed(0) + "%";
+    //console.log('Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.');
+};
+
+manager.onError = function ( url ) {
+    //console.log('There was an error loading ' + url);
+};
 // scene
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('skyblue');
