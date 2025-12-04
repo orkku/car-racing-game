@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import RAPIER from 'rapier';
+import * as THREE from 'three'; // Three JS versio 0.180.0
+import RAPIER from 'rapier';    // Rapier JS version 0.19.3
 import Stats from 'three/addons/libs/stats.module.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { cars } from './references.js';
@@ -11,7 +11,15 @@ followTarget.position.set(0, 1, 0);
 const pivot = new THREE.Object3D();
 const yaw = new THREE.Object3D();
 const pitch = new THREE.Object3D();
-let wheelFLAxel, wheelFRAxel, wheelRLAxel, wheelRRAxel;
+// FWD / RWD / AWD
+let wheelFLAxel = null;
+let wheelFRAxel = null;
+let wheelRLAxel = null;
+let wheelRRAxel = null;
+// STEERING
+let wheelFLSteer = null;
+let wheelFRSteer = null;
+// INPUT
 const keys = {
     forward: false,
     backward: false,
@@ -46,7 +54,8 @@ selection_4.addEventListener('click', () => {
 await RAPIER.init();
 const gravity = new THREE.Vector3( 0.0, -9.81, 0.0 );
 const world = new RAPIER.World( gravity );
-//console.log("Rapier version:", RAPIER.version());
+
+console.log("Rapier version:", RAPIER.version());
 
 // initialize THREE JS
 // ===================
@@ -178,7 +187,6 @@ window.addEventListener('resize', () => {
     camera.updateProjectionMatrix();    
     renderer.setSize( window.innerWidth, window.innerHeight );
 });
-
 const onDocumentKey = (e) => {
     if (e.type === 'keydown') {
         if (e.code === 'ArrowUp') {
@@ -231,6 +239,7 @@ function animate() {
     
     // Step the Rapier physics world
     world.step();
+    //rapierDebugRenderer.update();  
 
     // Update dynamicBodies
     if (dynamicBodies.length > 0) {
@@ -241,7 +250,6 @@ function animate() {
 
             mesh.position.copy(rb.translation());
             mesh.quaternion.copy(rb.rotation());
-
             if (name === 'Car') {
                 speedOMeter(rb);
                 updateCamera(mesh, delta);
@@ -256,31 +264,31 @@ function animate() {
     }
     
     let targetVelocity = 0;
-    let targetSteer = 0;
+    let steerTarget = 0;
     if (wheelFLAxel && wheelFRAxel && wheelRLAxel && wheelRRAxel) {
         // Moving
         if (keys.forward) {
-            targetVelocity = 200;
+            targetVelocity = 2000;
         }
         else if (keys.backward) {
-            targetVelocity = -100;
+            targetVelocity = -1000;
         }
         wheelRLAxel.configureMotorVelocity(targetVelocity, 2.0);
         wheelRRAxel.configureMotorVelocity(targetVelocity, 2.0);
-        // Steering
+    }
+
+    if (wheelFLSteer && wheelFRSteer) {
         if (keys.left) {
-            targetSteer += 0.6;
+            steerTarget += 0.6;
         }
         else if (keys.right) {
-            targetSteer -= 0.6;
+            steerTarget -= 0.6;
         }
-        wheelFLAxel.configureMotorPosition(targetSteer, 100, 10);
-        wheelFRAxel.configureMotorPosition(targetSteer, 100, 10);
+        wheelFLSteer.configureMotorPosition(steerTarget, 1000, 40);
+        wheelFRSteer.configureMotorPosition(steerTarget, 1000, 40);
     }
-    
-    //controls.update();
+
     renderer.render( scene, camera );
-    //rapierDebugRenderer.update();  
 }
 
 function loadTrack(callback) {
@@ -294,8 +302,14 @@ function loadTrack(callback) {
     });
 }
 
-let carPath, wheelFLPath, wheelFRPath, wheelRLPath, wheelRRPath, offsetFL, offsetFR, offsetRL, offsetRR, wheelRadius, wheelWidth, carGeometry;
-const wheelFriction = 1;
+let carPath, wheelFLPath, wheelFRPath, wheelRLPath, wheelRRPath, offsetFL, offsetFR, offsetRL, offsetRR, wheelRadius, wheelWidth, carGeometry, springRestLengthFront, springRestLengthRear, springStiffness, springDamping, springLimits;
+const carMass = 1200;
+const wheelMass = 40;
+const steeringMass = 10;
+const suspensionMass = 15;
+const wheelFrictionFront = 1.015;
+const wheelFrictionRear = 1.025;
+
 
 function loadCar(num, carPos) {
     switch (num) {
@@ -309,6 +323,11 @@ function loadCar(num, carPos) {
         offsetFR = cars.car1.offsetFR;
         offsetRL = cars.car1.offsetRL;
         offsetRR = cars.car1.offsetRR;
+        springRestLengthFront = cars.car1.frontRestLength;
+        springRestLengthRear = cars.car1.rearRestLength;
+        springStiffness = cars.car1.stiffness;
+        springDamping = cars.car1.damping;
+        springLimits = cars.car1.limits;
         wheelRadius = cars.car1.wheelRadius;
         wheelWidth = cars.car1.wheelWidth;
         carGeometry = cars.car1.geometry;
@@ -323,6 +342,11 @@ function loadCar(num, carPos) {
         offsetFR = cars.car2.offsetFR;
         offsetRL = cars.car2.offsetRL;
         offsetRR = cars.car2.offsetRR;
+        springRestLengthFront = cars.car2.frontRestLength;
+        springRestLengthRear = cars.car2.rearRestLength;
+        springStiffness = cars.car2.stiffness;
+        springDamping = cars.car2.damping;
+        springLimits = cars.car2.limits;
         wheelRadius = cars.car2.wheelRadius;
         wheelWidth = cars.car2.wheelWidth;
         carGeometry = cars.car2.geometry;
@@ -337,6 +361,11 @@ function loadCar(num, carPos) {
         offsetFR = cars.car4.offsetFR;
         offsetRL = cars.car4.offsetRL;
         offsetRR = cars.car4.offsetRR;
+        springRestLengthFront = cars.car4.frontRestLength;
+        springRestLengthRear = cars.car4.rearRestLength;
+        springStiffness = cars.car4.stiffness;
+        springDamping = cars.car4.damping;
+        springLimits = cars.car4.limits;
         wheelRadius = cars.car4.wheelRadius;
         wheelWidth = cars.car4.wheelWidth;
         carGeometry = cars.car4.geometry;
@@ -351,6 +380,11 @@ function loadCar(num, carPos) {
         offsetFR = cars.car10.offsetFR;
         offsetRL = cars.car10.offsetRL;
         offsetRR = cars.car10.offsetRR;
+        springRestLengthFront = cars.car10.frontRestLength;
+        springRestLengthRear = cars.car10.rearRestLength;
+        springStiffness = cars.car10.stiffness;
+        springDamping = cars.car10.damping;
+        springLimits = cars.car10.limits;
         wheelRadius = cars.car10.wheelRadius;
         wheelWidth = cars.car10.wheelWidth;
         carGeometry = cars.car10.geometry;
@@ -372,9 +406,7 @@ function loadCar(num, carPos) {
         // Wait a frame to ensure transforms are updated
         fbx.updateMatrixWorld(true);
 
-        const carColliderDesc = RAPIER.ColliderDesc.cuboid(carGeometry.x, carGeometry.y, carGeometry.z)
-            .setMass(100)
-            .setCollisionGroups(131073);
+        const carColliderDesc = RAPIER.ColliderDesc.cuboid(carGeometry.x, carGeometry.y, carGeometry.z).setMass(carMass).setCollisionGroups(131073);
             
         carRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(carPos.x, carPos.y, carPos.z));
@@ -393,123 +425,371 @@ function loadCar(num, carPos) {
 
         for (const wheel of wheels) {
             loader.load(wheel.path, (wfbx) => {
-                if (wheel.name === 'FL') { // front left wheel
+                // ------------------------------
+                // FRONT LEFT (FL) WHEEL
+                // ------------------------------
+                if (wheel.name === 'FL') {
                     wfbx.scale.setScalar(0.005);
-                    wfbx.position.copy(wheel.offset);
                     scene.add(wfbx);
-                     
-                    // Wheel setup 
-                    const wheelCollider = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
-                        .setMass(20)
+
+                    // 1) WHEEL BODY
+                    const wheelColliderDesc = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
+                        .setMass(wheelMass)
                         .setRestitution(0.01)
-                        .setFriction(wheelFriction)
+                        .setFriction(wheelFrictionFront)
                         .setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2))
-                        .setCollisionGroups(262145); // The wheels collide with the floor only
-                    const wheelRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z));
+                        .setCollisionGroups(262145);
 
-                    world.createCollider(wheelCollider, wheelRigidBody);
+                    const wheelRigidBody = world.createRigidBody(
+                        RAPIER.RigidBodyDesc.dynamic().setTranslation(
+                            carPos.x + wheel.offset.x,
+                            carPos.y + wheel.offset.y,
+                            carPos.z + wheel.offset.z
+                        )
+                    );
 
+                    world.createCollider(wheelColliderDesc, wheelRigidBody);
                     dynamicBodies.push([wfbx, wheelRigidBody, 'FL']);
 
-                    // Axel setup
-                    const axelFLCollider = RAPIER.ColliderDesc.cuboid(0.1, 0.1, 0.1)
-                        .setMass(10)
-                        .setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2))
-                        .setCollisionGroups(589823);
-                    const axelFLRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z)
+                    // 2) SUSPENSION BODY
+                    const suspensionBody = world.createRigidBody(
+                        RAPIER.RigidBodyDesc.dynamic()
+                            .setTranslation(
+                                carPos.x + wheel.offset.x,
+                                carPos.y + wheel.offset.y,
+                                carPos.z + wheel.offset.z
+                            )
+                            .setLinearDamping(4)
+                            .setAngularDamping(4)
                     );
 
-                    world.createCollider(axelFLCollider, axelFLRigidBody);
+                    world.createCollider(
+                        RAPIER.ColliderDesc.ball(0.25).setMass(suspensionMass).setCollisionGroups(0),
+                        suspensionBody
+                    );
 
-                    dynamicBodies.push([new THREE.Object3D(), axelFLRigidBody, 'axelFL']);
+                    // 3) STEERING BODY
+                    const steerBody = world.createRigidBody(
+                        RAPIER.RigidBodyDesc.dynamic()
+                            .setTranslation(
+                                carPos.x + wheel.offset.x,
+                                carPos.y + wheel.offset.y,
+                                carPos.z + wheel.offset.z
+                            )
+                            .setLinearDamping(4)
+                            .setAngularDamping(4)
+                    );
 
-                    // Attach joints
-                    wheelFLAxel = world.createImpulseJoint(RAPIER.JointData.revolute(new THREE.Vector3(wheel.offset.x, wheel.offset.y, wheel.offset.z), new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)), carRigidBody, axelFLRigidBody);
-                    wheelFLAxel.configureMotorModel(RAPIER.MotorModel.ForceBased);
-                    world.createImpulseJoint(RAPIER.JointData.revolute(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)), axelFLRigidBody, wheelRigidBody);
+                    world.createCollider(
+                        RAPIER.ColliderDesc.ball(0.20).setMass(steeringMass).setCollisionGroups(0),
+                        steerBody
+                    );
+
+                    // ------------ JOINTS ---------------
+
+                    // A) Jousi: CAR → SUSPENSION body
+                    const springJoint = RAPIER.JointData.prismatic(
+                        { x: wheel.offset.x, y: wheel.offset.y, z: wheel.offset.z },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 }
+                    );
+
+                    springJoint.limitsEnabled = true;
+                    springJoint.limits = springLimits;
+
+                    const spring = world.createImpulseJoint(
+                        springJoint,
+                        carRigidBody,
+                        suspensionBody
+                    );
+
+                    spring.configureMotorPosition(
+                        springRestLengthFront,
+                        springStiffness,
+                        springDamping
+                    );
+
+                    // B) Steerausnivel: SUSPENSION → STEER body (revolute around Y)
+                    const steerJoint = RAPIER.JointData.revolute(
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 }  // y-akseli = kääntö
+                    );
+
+                    const steer = world.createImpulseJoint(
+                        steerJoint,
+                        suspensionBody,
+                        steerBody
+                    );
+
+                    steer.configureMotorModel(RAPIER.MotorModel.ForceBased);
+                    wheelFLSteer = steer;       // talteen kääntömoottoria varten
+                    
+                    // C) Akseliratas: STEER body → WHEEL body (revolute around X)
+                    const axleJoint = RAPIER.JointData.revolute(
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 1, y: 0, z: 0 }  // x-akseli
+                    );
+
+                    wheelFLAxel = world.createImpulseJoint(
+                        axleJoint,
+                        steerBody,
+                        wheelRigidBody
+                    );
                 }
-                else if (wheel.name === 'FR') { // front right wheel
+                // ------------------------------
+                // FRONT RIGHT (FR) WHEEL
+                // ------------------------------
+                else if (wheel.name === 'FR') {
                     wfbx.scale.setScalar(0.005);
-                    wfbx.position.copy(wheel.offset);
                     scene.add(wfbx);
 
-                    // Wheel setup 
-                    const wheelCollider = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
-                        .setMass(20)
+                    // 1) WHEEL BODY
+                    const wheelColliderDesc = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
+                        .setMass(wheelMass)
                         .setRestitution(0.01)
-                        .setFriction(wheelFriction)
+                        .setFriction(wheelFrictionFront)
                         .setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2))
-                        .setCollisionGroups(262145); // The wheels collide with the floor only
-                    const wheelRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z));
+                        .setCollisionGroups(262145);
 
-                    world.createCollider(wheelCollider, wheelRigidBody);
+                    const wheelRigidBody = world.createRigidBody(
+                        RAPIER.RigidBodyDesc.dynamic().setTranslation(
+                            carPos.x + wheel.offset.x,
+                            carPos.y + wheel.offset.y,
+                            carPos.z + wheel.offset.z
+                        )
+                    );
 
+                    world.createCollider(wheelColliderDesc, wheelRigidBody);
                     dynamicBodies.push([wfbx, wheelRigidBody, 'FR']);
 
-                    // Axel setup
-                    const axelFLCollider = RAPIER.ColliderDesc.cuboid(0.1, 0.1, 0.1)
-                        .setMass(10)
-                        .setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2))
-                        .setCollisionGroups(589823);
-                    const axelFLRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z)
+                    // 2) SUSPENSION BODY
+                    const suspensionBody = world.createRigidBody(
+                        RAPIER.RigidBodyDesc.dynamic()
+                            .setTranslation(
+                                carPos.x + wheel.offset.x,
+                                carPos.y + wheel.offset.y,
+                                carPos.z + wheel.offset.z
+                            )
+                            .setLinearDamping(4)
+                            .setAngularDamping(4)
                     );
 
-                    world.createCollider(axelFLCollider, axelFLRigidBody);
+                    world.createCollider(
+                        RAPIER.ColliderDesc.ball(0.25).setMass(suspensionMass).setCollisionGroups(0),
+                        suspensionBody
+                    );
 
-                    dynamicBodies.push([new THREE.Object3D(), axelFLRigidBody, 'axelFR']);
+                    // 3) STEERING BODY
+                    const steerBody = world.createRigidBody(
+                        RAPIER.RigidBodyDesc.dynamic()
+                            .setTranslation(
+                                carPos.x + wheel.offset.x,
+                                carPos.y + wheel.offset.y,
+                                carPos.z + wheel.offset.z
+                            )
+                            .setLinearDamping(4)
+                            .setAngularDamping(4)
+                    );
 
-                    // Attach joints
-                    wheelFRAxel = world.createImpulseJoint(RAPIER.JointData.revolute(new THREE.Vector3(wheel.offset.x, wheel.offset.y, wheel.offset.z), new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0)), carRigidBody, axelFLRigidBody);
-                    wheelFRAxel.configureMotorModel(RAPIER.MotorModel.ForceBased);
-                    world.createImpulseJoint(RAPIER.JointData.revolute(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)), axelFLRigidBody, wheelRigidBody);
+                    world.createCollider(
+                        RAPIER.ColliderDesc.ball(0.20).setMass(steeringMass).setCollisionGroups(0),
+                        steerBody
+                    );
+
+                    // ------------ JOINTS ---------------
+
+                    // A) Jousi: CAR → SUSPENSION body
+                    const springJoint = RAPIER.JointData.prismatic(
+                        { x: wheel.offset.x, y: wheel.offset.y, z: wheel.offset.z },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 }
+                    );
+
+                    springJoint.limitsEnabled = true;
+                    springJoint.limits = springLimits;
+
+                    const spring = world.createImpulseJoint(
+                        springJoint,
+                        carRigidBody,
+                        suspensionBody
+                    );
+
+                    spring.configureMotorPosition(
+                        springRestLengthFront,
+                        springStiffness,
+                        springDamping
+                    );
+
+                    // B) Steerausnivel: SUSPENSION → STEER body (revolute around Y)
+                    const steerJoint = RAPIER.JointData.revolute(
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 }  // y-akseli = kääntö
+                    );
+
+                    const steer = world.createImpulseJoint(
+                        steerJoint,
+                        suspensionBody,
+                        steerBody
+                    );
+
+                    steer.configureMotorModel(RAPIER.MotorModel.ForceBased);
+                    wheelFRSteer = steer;       // talteen kääntömoottoria varten
+
+                    // C) Akseliratas: STEER body → WHEEL body (revolute around X)
+                    const axleJoint = RAPIER.JointData.revolute(
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 1, y: 0, z: 0 }  // x-akseli
+                    );
+
+                    wheelFRAxel = world.createImpulseJoint(
+                        axleJoint,
+                        steerBody,
+                        wheelRigidBody
+                    );
                 }
-                else if (wheel.name === 'RL') { // rear left wheel
+                // ------------------------------
+                // REAR LEFT (RL) WHEEL
+                // ------------------------------
+                else if (wheel.name === 'RL') {
                     wfbx.scale.setScalar(0.005);
-                    wfbx.position.copy(wheel.offset);
                     scene.add(wfbx);
 
-                    // Wheel setup 
-                    const wheelCollider = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
-                        .setMass(20)
+                    // Wheel setup
+                    const wheelColliderDesc = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
+                        .setMass(wheelMass)
                         .setRestitution(0.01)
-                        .setFriction(wheelFriction)
+                        .setFriction(wheelFrictionRear)
                         .setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2))
                         .setCollisionGroups(262145); // The wheels collide with the floor only
                     const wheelRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z));
+                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z));  
 
-                    world.createCollider(wheelCollider, wheelRigidBody);
+                    world.createCollider(wheelColliderDesc, wheelRigidBody);
 
                     dynamicBodies.push([wfbx, wheelRigidBody, 'RL']);
 
-                    // Attach joints
-                    wheelRLAxel = world.createImpulseJoint(RAPIER.JointData.revolute(new THREE.Vector3(wheel.offset.x, wheel.offset.y, wheel.offset.z), new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)), carRigidBody, wheelRigidBody);
+                    const wheel_joint = RAPIER.JointData.revolute(
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 1, y: 0, z: 0 }
+                    );
+
+                    // Suspension setup
+                    const suspensionBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+                        .setTranslation(carPos.x + wheel.offset.x,
+                                        carPos.y + wheel.offset.y,
+                                        carPos.z + wheel.offset.z)
+                        .setLinearDamping(4)
+                        .setAngularDamping(4);
+
+                    const suspensionRigidBody = world.createRigidBody(suspensionBodyDesc);
+
+                    world.createCollider(
+                        RAPIER.ColliderDesc.ball(0.2)     // huom! EI 0.01!
+                            .setMass(suspensionMass)                 // jousirungolla oltava massaa
+                            .setCollisionGroups(0),
+                        suspensionRigidBody
+                    );
+
+                    const suspension_joint = RAPIER.JointData.prismatic(
+                        { x: wheel.offset.x, y: wheel.offset.y, z: wheel.offset.z },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 }
+                    );
+                    
+                    suspension_joint.limitsEnabled = true;
+                    suspension_joint.limits = springLimits;
+                                        
+                    // Create joint connections
+                    // 1. Jousi kiinnittyy CAR → SUSPENSIONRIGIDBODY
+                    const spring_joint = world.createImpulseJoint(
+                        suspension_joint,
+                        carRigidBody,
+                        suspensionRigidBody
+                    );
+
+                    // 2. Pyöräakseli kiinnittyy SUSPENSIONRIGIDBODY → WHEELRIGIDBODY
+                    wheelRLAxel = world.createImpulseJoint(
+                        wheel_joint,
+                        suspensionRigidBody,
+                        wheelRigidBody
+                    );
+
+                    spring_joint.configureMotorPosition(springRestLengthRear, springStiffness, springDamping);
                 }
-                else if (wheel.name === 'RR') { // rear right wheel
+                // ------------------------------
+                // REAR RIGHT (RR) WHEEL
+                // ------------------------------
+                else if (wheel.name === 'RR') {
                     wfbx.scale.setScalar(0.005);
-                    wfbx.position.copy(wheel.offset);
                     scene.add(wfbx);
 
-                    // Wheel setup 
-                    const wheelCollider = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
-                        .setMass(20)
+                    // Wheel setup
+                    const wheelColliderDesc = RAPIER.ColliderDesc.cylinder(wheelWidth, wheelRadius)
+                        .setMass(wheelMass)
                         .setRestitution(0.01)
-                        .setFriction(wheelFriction)
+                        .setFriction(wheelFrictionRear)
                         .setRotation(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2))
                         .setCollisionGroups(262145); // The wheels collide with the floor only
                     const wheelRigidBody = world.createRigidBody(RAPIER.RigidBodyDesc.dynamic()
-                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z));
+                        .setTranslation(carPos.x + wheel.offset.x, carPos.y + wheel.offset.y, carPos.z + wheel.offset.z));  
 
-                    world.createCollider(wheelCollider, wheelRigidBody, 'RR');
+                    world.createCollider(wheelColliderDesc, wheelRigidBody);
 
-                    dynamicBodies.push([wfbx, wheelRigidBody]);
+                    dynamicBodies.push([wfbx, wheelRigidBody, 'RR']);
 
-                    // Attach joints
-                    wheelRRAxel = world.createImpulseJoint(RAPIER.JointData.revolute(new THREE.Vector3(wheel.offset.x, wheel.offset.y, wheel.offset.z), new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0)), carRigidBody, wheelRigidBody);
+                    const wheel_joint = RAPIER.JointData.revolute(
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 1, y: 0, z: 0 }
+                    );
+
+                    // Suspension setup
+                    const suspensionBodyDesc = RAPIER.RigidBodyDesc.dynamic()
+                        .setTranslation(carPos.x + wheel.offset.x,
+                                        carPos.y + wheel.offset.y,
+                                        carPos.z + wheel.offset.z)
+                        .setLinearDamping(4)
+                        .setAngularDamping(4);
+
+                    const suspensionRigidBody = world.createRigidBody(suspensionBodyDesc);
+
+                    world.createCollider(
+                        RAPIER.ColliderDesc.ball(0.2)     // huom! EI 0.01!
+                            .setMass(suspensionMass)                 // jousirungolla oltava massaa
+                            .setCollisionGroups(0),
+                        suspensionRigidBody
+                    );
+
+                    const suspension_joint = RAPIER.JointData.prismatic(
+                        { x: wheel.offset.x, y: wheel.offset.y, z: wheel.offset.z },
+                        { x: 0, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 }
+                    );
+                    
+                    suspension_joint.limitsEnabled = true;
+                    suspension_joint.limits = springLimits;
+                                        
+                    // Create joint connections
+                    // 1. Jousi kiinnittyy CAR → SUSPENSIONRIGIDBODY
+                    const spring_joint = world.createImpulseJoint(
+                        suspension_joint,
+                        carRigidBody,
+                        suspensionRigidBody
+                    );
+
+                    // 2. Pyöräakseli kiinnittyy SUSPENSIONRIGIDBODY → WHEELRIGIDBODY
+                    wheelRRAxel = world.createImpulseJoint(
+                        wheel_joint,
+                        suspensionRigidBody,
+                        wheelRigidBody
+                    );
+
+                    spring_joint.configureMotorPosition(springRestLengthRear, springStiffness, springDamping);
                 }
             });
         }
@@ -517,7 +797,6 @@ function loadCar(num, carPos) {
         
         
     });
-
 }
 
 function speedOMeter(rigidBody) {
@@ -595,16 +874,14 @@ class RapierDebugRenderer {
     }
 }
 
-function startGame() {
-    loadTrack(() => {
-        loadCar(car_number, new THREE.Vector3(0, 0.55, 0));
-    });
-}
-/*
 // Function Calls
 // ==============
-loadTrack();
-loadCar(car_number, new THREE.Vector3(0, 0.55, 0)); // Loads car number and set its position on world
+function startGame() {
+    loadTrack(() => {
+        loadCar(car_number, new THREE.Vector3(0, 0.55, 0)); // Loads car number and set its position on world
+    });
+}
+
 //const rapierDebugRenderer = new RapierDebugRenderer();
-*/
+
 animate();
