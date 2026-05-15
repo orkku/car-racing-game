@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Racing Game</title>
+    <link rel="stylesheet" href="./style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="startup" class="visible">
+        <div id="instructions">
+            <p style="font-size:60px">Car Racing Game</p>
+            <p>
+                <table>                    
+                    <tr><td align="left"><b>Forward:</b></td><td align="left">Key A or UP ARROW</td></tr>
+                    <tr><td align="left"><b>Backward:</b></td><td align="left">Key Z or DOWN ARROW</td></tr>
+                    <tr><td align="left"><b>Right:</b></td><td align="left">Key . or RIGHT ARROW</td></tr>
+                    <tr><td align="left"><b>Left:</b></td><td align="left">Key , or LEFT ARROW</td></tr>
+                    <tr><td align="left"><b>Reset:</b></td><td align="left">Key R</td></tr>
+                    <tr><td align="left"><b>MainMenu:</b></td><td align="left">Key Escape</td></tr>
+                </table>
+            </p>
+            <button id="playbutton">Click to Play</button>
+        </div>
+        <div id="madeby">
+            Made by Aki Luopa 2026 (version 1.0)
+        </div>
+    </div>
+    <div id="speedometer" class="hidden">0 km/h</div>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
