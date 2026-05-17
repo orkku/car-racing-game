@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { init_physics, physicsHelper, vehicleController, load_car, update_wheels, update_car_control, update_model } from './car.js';
-import { load_track } from './track.js';
 import { load_sounds } from './sounds.js';
 
 export const game_status = {
@@ -79,5 +78,4 @@ function animate() {
 // FUNCTION CALLS (start game)
 init_physics();
 load_car();
-load_track();
 load_sounds();

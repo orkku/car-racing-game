@@ -4,6 +4,7 @@ import { RapierHelper } from 'three/addons/helpers/RapierHelper.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { scene, camera, manager, game_status } from './main.js';
 import { update_engine_sound } from './sounds.js';
+import { load_track } from './track.js';
 
 const play_button = document.getElementById('playbutton');
 const startup_screen = document.getElementById('startup');
@@ -42,7 +43,7 @@ export async function load_car() {
     scene.add(car_collection);
 }
 
-function create_car() {
+async function create_car() {
     const geometry = new THREE.BoxGeometry( 2.75, 1, 6.25 );
     const material = new THREE.MeshStandardMaterial( { color: 0xFF0000, wireframe: true, visible: false } );
     const mesh = new THREE.Mesh( geometry, material );
@@ -254,9 +255,11 @@ export async function init_physics() {
     physicsHelper = new RapierHelper( physics.world );
     scene.add( physicsHelper );
 
+    await load_track();
+
     physics.addScene( scene );
 
-    create_car();
+    await create_car();
 
 }
 
