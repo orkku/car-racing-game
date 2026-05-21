@@ -8,14 +8,14 @@ import { load_track } from './track.js';
 
 const play_button = document.getElementById('playbutton');
 const startup_screen = document.getElementById('startup');
+const lap_time = document.getElementById('displaycurrenttime');
+const best_time = document.getElementById('displaybesttime');
 const speed_o_meter = document.getElementById('speedometer');
 var physics;
 export var physicsHelper;
 var body, steering_wheel;
 const car_collection = new THREE.Group();
-export var chassis;
-var car, wheels;
-export var vehicleController;
+export var car, wheels, chassis, vehicleController;
 var angle = 0;
 const movement = {
     forward: 0,
@@ -275,6 +275,8 @@ window.addEventListener( 'keydown', ( event ) => {
 
     if ( event.code === 'Escape' ){
         startup_screen.style.display = 'block';
+        lap_time.style.display = 'none';
+        best_time.style.display = 'none';
         speed_o_meter.style.display = 'none';
     
         if (game_status.sounds) {

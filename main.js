@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { init_physics, physicsHelper, vehicleController, load_car, update_wheels, update_car_control, update_model } from './car.js';
 import { load_sounds } from './sounds.js';
+import { update_checkpoints, update_clock, update_laps } from './track.js';
 
 export const game_status = {
-    sounds: false
+    sounds: false,
+    check_point: true
 };
 
 // SCENE
@@ -49,10 +51,14 @@ window.addEventListener('resize', (e) => {
 
 const play_button = document.getElementById('playbutton');
 const startup_screen = document.getElementById('startup');
+const lap_time = document.getElementById('displaycurrenttime');
+const best_time = document.getElementById('displaybesttime');
 const speed_o_meter = document.getElementById('speedometer');
 
 play_button.addEventListener('click', (e) => {
     startup_screen.style.display = 'none';
+    lap_time.style.display = 'block';
+    best_time.style.display = 'block';
     speed_o_meter.style.display = 'block';
 
     if (!game_status.sounds) {
@@ -68,6 +74,9 @@ function animate() {
         vehicleController.updateVehicle( 1 / 60 );
         update_wheels();
         update_model();
+        update_laps();
+        update_checkpoints();
+        update_clock();
     }
 
     //if ( physicsHelper ) physicsHelper.update();

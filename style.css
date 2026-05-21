@@ -17,13 +17,29 @@ body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    font-size: 24px;
+    font-size: 20px;
 }
 
 #playbutton {
     padding: 20px;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 22px;
+    font-size: 18px;
+}
+
+#displaycurrenttime {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-size: 30px;
+}
+
+#displaybesttime {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    color: white;
+    font-size: 24px;
 }
 
 #speedometer {
@@ -38,7 +54,7 @@ body {
 #madeby {
     position: fixed;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 20px;
+    font-size: 12px;
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
