@@ -1,5 +1,7 @@
 # car-racing-game
 you can test it here: https://orkku.github.io/car-racing-game/
+## version 1.3
+- added lap timer
 ## version 1.2
 - track physics creation issue fixed
 ## version 1.1
