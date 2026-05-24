@@ -6,7 +6,7 @@ import { car } from './car.js';
 const lap_time = document.getElementById('displaycurrenttime');
 const best_time = document.getElementById('displaybesttime');
 var display_current_lap = 'Current: 0:0.000', display_best_lap = 'Best: 0:0.000';
-var time = 0, ms = 0, seconds = 0, minutes = 0;
+var time = 0, ms = 0, seconds = 0, minutes = 0, hours = 0;
 var best_lap = 0, current_lap = 0;
 var finish, checkpoint;
 var finish_previousDot = 0;
@@ -105,7 +105,8 @@ export function update_clock() {
         ms = String(Math.floor((time % 1) * 1000)).padStart(3, '0');
         seconds = Math.floor(time % 60);
         minutes = Math.floor(time / 60);
-        display_current_lap = `Current: ${minutes}:${seconds}.${ms}`;
+        hours = Math.floor(time / 3600);
+        display_current_lap = `Current: ${hours}:${minutes}:${seconds}.${ms}`;
         lap_time.innerHTML = display_current_lap;
     }
 }
@@ -115,6 +116,7 @@ function reset_time() {
         var ms2 = 0;
         var seconds2 = 0;
         var minutes2 = 0;
+        var hours2 = 0;
         clock.stop();
         current_lap = time;
         if (best_lap === 0) {
@@ -126,7 +128,7 @@ function reset_time() {
         ms2 = String(Math.floor((best_lap % 1) * 1000)).padStart(3, '0');
         seconds2 = Math.floor(best_lap % 60);
         minutes2 = Math.floor(best_lap / 60);
-        display_best_lap = `Best: ${minutes2}:${seconds2}.${ms2}`;
+        display_best_lap = `Best: ${hours2}:${minutes2}:${seconds2}.${ms2}`;
         best_time.innerHTML = display_best_lap;
         clock.startTime = 0;
         clock.start();

@@ -192,7 +192,7 @@ export function update_car_control() {
     const steerDirection = movement.right;
     const steerAngle = Math.PI / 8;
 
-    const steering = THREE.MathUtils.lerp( currentSteering, steerAngle * steerDirection, 0.05 ); // viimeinen luku alunperin 0.25
+    const steering = THREE.MathUtils.lerp( currentSteering, steerAngle * steerDirection, 0.025 ); // viimeinen luku alunperin 0.25
 
     // ohjauspyörä
     if (steering != 0 && steering_wheel) {
@@ -203,10 +203,10 @@ export function update_car_control() {
     vehicleController.setWheelSteering( 1, steering );
 
     const wheelBrake = movement.brake * brakeForce;
-    vehicleController.setWheelBrake( 0, wheelBrake );
-    vehicleController.setWheelBrake( 1, wheelBrake );
-    vehicleController.setWheelBrake( 2, wheelBrake );
-    vehicleController.setWheelBrake( 3, wheelBrake );
+    vehicleController.setWheelBrake( 0, wheelBrake * 0.75 );
+    vehicleController.setWheelBrake( 1, wheelBrake * 0.75 );
+    vehicleController.setWheelBrake( 2, wheelBrake * 0.65 );
+    vehicleController.setWheelBrake( 3, wheelBrake * 0.65 );
 }
 
 export function update_model() {
